@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -133,6 +134,24 @@ func postForm(ctx context.Context, endpoint string, values url.Values, intf inte
 	resp, err := getHTTPClient().Do(req)
 	if err != nil {
 		return err
+	} else {
+		for resp != nil && resp.StatusCode == 429 {
+			retryAfter := resp.Header.Get("Retry-After")
+			retryAfterSeconds, err := strconv.Atoi(retryAfter)
+			if err != nil {
+				retryAfterSeconds = 5
+			}
+			// Sleep for the required amount of time and try again
+			time.Sleep(time.Duration(retryAfterSeconds) * time.Second)
+			reqBody := strings.NewReader(values.Encode())
+			req, err := http.NewRequest("POST", endpoint, reqBody)
+			if err != nil {
+				return err
+			}
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			req = req.WithContext(ctx)
+			resp, err = getHTTPClient().Do(req)
+		}
 	}
 	defer resp.Body.Close()
 
