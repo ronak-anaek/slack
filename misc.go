@@ -143,14 +143,7 @@ func postForm(ctx context.Context, endpoint string, values url.Values, intf inte
 			}
 			// Sleep for the required amount of time and try again
 			time.Sleep(time.Duration(retryAfterSeconds) * time.Second)
-			reqBody := strings.NewReader(values.Encode())
-			req, err := http.NewRequest("POST", endpoint, reqBody)
-			if err != nil {
-				return err
-			}
-			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-			req = req.WithContext(ctx)
-			resp, err = getHTTPClient().Do(req)
+			return postForm(ctx, endpoint, values, intf, debug)
 		}
 	}
 	defer resp.Body.Close()
