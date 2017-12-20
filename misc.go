@@ -136,6 +136,7 @@ func postForm(ctx context.Context, endpoint string, values url.Values, intf inte
 		return err
 	} else {
 		for resp != nil && resp.StatusCode == 429 {
+			logger.Printf("Endpoint breaking: %s\n", values["token"][0])
 			logResponse(resp, debug)
 			retryAfter := resp.Header.Get("Retry-After")
 			retryAfterSeconds, err := strconv.Atoi(retryAfter)
